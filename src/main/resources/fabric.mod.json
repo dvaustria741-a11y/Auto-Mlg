@@ -9,11 +9,6 @@
   ],
   "license": "MIT",
   "environment": "*",
-  "entrypoints": {
-    "main": [
-      "com.zen.automlg.AutoMLG"
-    ]
-  },
   "mixins": [
     "automlg.mixins.json"
   ],

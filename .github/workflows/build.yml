@@ -30,3 +30,4 @@ jobs:
         with:
           name: auto-mlg
           path: build/libs/*.jar
+          if-no-files-found: error

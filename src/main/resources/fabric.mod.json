@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "automlg",
+  "version": "${version}",
+  "name": "Auto MLG",
+  "description": "Automatic boat, water bucket, and powder snow MLG with reliable auto pickup. Toggle with /automlg <feature> <true|false>",
+  "authors": [
+    "Zen"
+  ],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.zen.automlg.AutoMLG"
+    ]
+  },
+  "mixins": [
+    "automlg.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "minecraft": "~1.21.1",
+    "fabric-api": "*"
+  }
+}

@@ -3,12 +3,21 @@
   "id": "automlg",
   "version": "${version}",
   "name": "Auto MLG",
-  "description": "Automatic boat, water bucket, and powder snow MLG with reliable auto pickup. Toggle with /automlg <feature> <true|false>",
+  "description": "Automatic boat, water bucket, and powder snow MLG with reliable auto pickup. Configure via Mod Menu.",
   "authors": [
     "Zen"
   ],
   "license": "MIT",
+  "icon": "assets/automlg/icon.png",
   "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.zen.automlg.AutoMLG"
+    ],
+    "modmenu": [
+      "com.zen.automlg.AutoMLGModMenu"
+    ]
+  },
   "mixins": [
     "automlg.mixins.json"
   ],

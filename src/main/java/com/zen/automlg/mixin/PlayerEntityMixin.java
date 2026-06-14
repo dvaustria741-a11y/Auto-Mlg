@@ -3,6 +3,9 @@ package com.zen.automlg.mixin;
 import com.zen.automlg.AutoMLGConfig;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.BlockState;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.passive.HorseEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.fluid.Fluids;
@@ -32,8 +35,17 @@ public abstract class PlayerEntityMixin {
     @Unique private int automlg$snowPickupTimer = -1;
     @Unique private BlockPos automlg$snowPickupPos = null;
 
-    @Unique private int automlg$boatTimer = -1;
-    @Unique private BoatEntity automlg$boat = null;
+    @Unique private int automlg$hayBalePickupTimer = -1;
+    @Unique private BlockPos automlg$hayBalePickupPos = null;
+
+    @Unique private int automlg$cobwebPickupTimer = -1;
+    @Unique private BlockPos automlg$cobwebPickupPos = null;
+
+    @Unique private int automlg$sweetBerryPickupTimer = -1;
+    @Unique private BlockPos automlg$sweetBerryPickupPos = null;
+
+    @Unique private int automlg$vehicleTimer = -1;
+    @Unique private Entity automlg$vehicle = null;
 
     @Inject(method = "tick", at = @At("head"))
     private void automlg$onTick(CallbackInfo ci) {
@@ -46,18 +58,33 @@ public abstract class PlayerEntityMixin {
 
         automlg$waterPickup(player, world);
         automlg$snowPickup(player, world);
-        automlg$boatCleanup(player, world);
+        automlg$hayBalePickup(player, world);
+        automlg$cobwebPickup(player, world);
+        automlg$sweetBerryPickup(player, world);
+        automlg$vehicleCleanup(player, world);
 
         ItemStack main = player.getStackInHand(Hand.MAIN_HAND);
 
         if (AutoMLGConfig.boatEnabled && main.getItem() instanceof BoatItem) {
-            automlg$boatMLG(player, world);
+            automlg$vehicleMLG(player, world, false);
+        }
+        if (AutoMLGConfig.horseEnabled && main.isOf(Items.SADDLE)) {
+            automlg$vehicleMLG(player, world, true);
         }
         if (AutoMLGConfig.waterEnabled && main.isOf(Items.WATER_BUCKET)) {
             automlg$placeWater(player, world);
         }
         if (AutoMLGConfig.snowEnabled && main.isOf(Items.POWDER_SNOW_BUCKET)) {
             automlg$placeSnow(player, world);
+        }
+        if (AutoMLGConfig.hayBaleEnabled && main.isOf(Items.HAY_BLOCK)) {
+            automlg$placeHayBale(player, world);
+        }
+        if (AutoMLGConfig.cobwebEnabled && main.isOf(Items.COBWEB)) {
+            automlg$placeCobweb(player, world);
+        }
+        if (AutoMLGConfig.sweetBerryEnabled && main.isOf(Items.SWEET_BERRIES)) {
+            automlg$placeSweetBerryBush(player, world);
         }
     }
 
@@ -162,42 +189,189 @@ public abstract class PlayerEntityMixin {
     }
 
     @Unique
-    private void automlg$boatMLG(PlayerEntity player, World world) {
-        if (automlg$boat != null) return;
+    private void automlg$placeHayBale(PlayerEntity player, World world) {
         if (player.getVelocity().y >= -0.5) return;
         if (!automlg$fallenEnough(player)) return;
 
-        BlockPos below = player.getBlockPos().down();
-        BlockState belowState = world.getBlockState(below);
-        if (!belowState.isAir() && belowState.getFluidState().isEmpty()) return;
-
+        BlockPos pos = player.getBlockPos();
+        BlockState here = world.getBlockState(pos);
+        if (!here.isAir()) return;
         if (!automlg$nearGround(player, world, GROUND_RANGE)) return;
 
-        BoatEntity boat = new BoatEntity(world, player.getX(), player.getY(), player.getZ());
-        boat.setYaw(player.getYaw());
-        boat.setNoGravity(true);
-        boat.setInvulnerable(true);
-        boat.setSilent(true);
-        world.spawnEntity(boat);
-        player.startRiding(boat, true);
+        BlockState place = Blocks.HAY_BLOCK.getDefaultState();
+        world.setBlockState(pos, place);
+        automlg$consumeOne(player);
+        world.playSound(null, pos, place.getSoundGroup().getPlaceSound(), SoundCategory.PLAYERS, 1.0f, 1.0f);
 
-        world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_BOAT_PADDLE_WATER, SoundCategory.PLAYERS, 1.0f, 1.0f);
-
-        automlg$boat = boat;
-        automlg$boatTimer = 1;
+        automlg$hayBalePickupPos = pos;
+        automlg$hayBalePickupTimer = 2;
     }
 
     @Unique
-    private void automlg$boatCleanup(PlayerEntity player, World world) {
-        if (automlg$boatTimer < 0) return;
-        automlg$boatTimer--;
-        if (automlg$boatTimer >= 0) return;
+    private void automlg$hayBalePickup(PlayerEntity player, World world) {
+        if (automlg$hayBalePickupTimer < 0) return;
+        automlg$hayBalePickupTimer--;
+        if (automlg$hayBalePickupTimer > 0) return;
 
-        if (automlg$boat != null) {
-            player.stopRiding();
-            automlg$boat.discard();
-            automlg$boat = null;
+        if (AutoMLGConfig.hayBalePickupEnabled) {
+            BlockPos pos = automlg$hayBalePickupPos;
+            BlockState state = world.getBlockState(pos);
+            if (state.isOf(Blocks.HAY_BLOCK)) {
+                world.setBlockState(pos, Blocks.AIR.getDefaultState());
+                automlg$returnOne(player, Items.HAY_BLOCK);
+                world.playSound(null, pos, state.getSoundGroup().getBreakSound(), SoundCategory.PLAYERS, 1.0f, 1.0f);
+            }
         }
-        automlg$boatTimer = -1;
+
+        automlg$hayBalePickupTimer = -1;
+        automlg$hayBalePickupPos = null;
+    }
+
+    @Unique
+    private void automlg$placeCobweb(PlayerEntity player, World world) {
+        if (player.getVelocity().y >= -0.5) return;
+        if (!automlg$fallenEnough(player)) return;
+
+        BlockPos pos = player.getBlockPos();
+        BlockState here = world.getBlockState(pos);
+        if (!here.isAir()) return;
+        if (!automlg$nearGround(player, world, GROUND_RANGE)) return;
+
+        BlockState place = Blocks.COBWEB.getDefaultState();
+        world.setBlockState(pos, place);
+        automlg$consumeOne(player);
+        world.playSound(null, pos, place.getSoundGroup().getPlaceSound(), SoundCategory.PLAYERS, 1.0f, 1.0f);
+
+        automlg$cobwebPickupPos = pos;
+        automlg$cobwebPickupTimer = 2;
+    }
+
+    @Unique
+    private void automlg$cobwebPickup(PlayerEntity player, World world) {
+        if (automlg$cobwebPickupTimer < 0) return;
+        automlg$cobwebPickupTimer--;
+        if (automlg$cobwebPickupTimer > 0) return;
+
+        if (AutoMLGConfig.cobwebPickupEnabled) {
+            BlockPos pos = automlg$cobwebPickupPos;
+            BlockState state = world.getBlockState(pos);
+            if (state.isOf(Blocks.COBWEB)) {
+                world.setBlockState(pos, Blocks.AIR.getDefaultState());
+                automlg$returnOne(player, Items.COBWEB);
+                world.playSound(null, pos, state.getSoundGroup().getBreakSound(), SoundCategory.PLAYERS, 1.0f, 1.0f);
+            }
+        }
+
+        automlg$cobwebPickupTimer = -1;
+        automlg$cobwebPickupPos = null;
+    }
+
+    @Unique
+    private void automlg$placeSweetBerryBush(PlayerEntity player, World world) {
+        if (player.getVelocity().y >= -0.5) return;
+        if (!automlg$fallenEnough(player)) return;
+
+        BlockPos pos = player.getBlockPos();
+        BlockState here = world.getBlockState(pos);
+        if (!here.isAir()) return;
+        if (!automlg$nearGround(player, world, GROUND_RANGE)) return;
+
+        BlockState place = Blocks.SWEET_BERRY_BUSH.getDefaultState();
+        world.setBlockState(pos, place);
+        automlg$consumeOne(player);
+        world.playSound(null, pos, place.getSoundGroup().getPlaceSound(), SoundCategory.PLAYERS, 1.0f, 1.0f);
+
+        automlg$sweetBerryPickupPos = pos;
+        automlg$sweetBerryPickupTimer = 2;
+    }
+
+    @Unique
+    private void automlg$sweetBerryPickup(PlayerEntity player, World world) {
+        if (automlg$sweetBerryPickupTimer < 0) return;
+        automlg$sweetBerryPickupTimer--;
+        if (automlg$sweetBerryPickupTimer > 0) return;
+
+        if (AutoMLGConfig.sweetBerryPickupEnabled) {
+            BlockPos pos = automlg$sweetBerryPickupPos;
+            BlockState state = world.getBlockState(pos);
+            if (state.isOf(Blocks.SWEET_BERRY_BUSH)) {
+                world.setBlockState(pos, Blocks.AIR.getDefaultState());
+                automlg$returnOne(player, Items.SWEET_BERRIES);
+                world.playSound(null, pos, state.getSoundGroup().getBreakSound(), SoundCategory.PLAYERS, 1.0f, 1.0f);
+            }
+        }
+
+        automlg$sweetBerryPickupTimer = -1;
+        automlg$sweetBerryPickupPos = null;
+    }
+
+    @Unique
+    private void automlg$consumeOne(PlayerEntity player) {
+        ItemStack stack = player.getStackInHand(Hand.MAIN_HAND);
+        stack.decrement(1);
+    }
+
+    @Unique
+    private void automlg$returnOne(PlayerEntity player, net.minecraft.item.Item item) {
+        ItemStack stack = player.getStackInHand(Hand.MAIN_HAND);
+        if (stack.isEmpty()) {
+            player.setStackInHand(Hand.MAIN_HAND, new ItemStack(item));
+        } else if (stack.isOf(item) && stack.getCount() < stack.getMaxCount()) {
+            stack.increment(1);
+        } else {
+            ItemStack extra = new ItemStack(item);
+            if (!player.getInventory().insertStack(extra)) {
+                player.dropItem(extra, false);
+            }
+        }
+    }
+
+    @Unique
+    private void automlg$vehicleMLG(PlayerEntity player, World world, boolean horse) {
+        if (automlg$vehicle != null) return;
+        if (player.getVelocity().y >= -0.5) return;
+        if (!automlg$fallenEnough(player)) return;
+        if (!automlg$nearGround(player, world, GROUND_RANGE)) return;
+
+        Entity vehicle;
+        if (horse) {
+            HorseEntity horseEntity = new HorseEntity(EntityType.HORSE, world);
+            horseEntity.setPosition(player.getX(), player.getY(), player.getZ());
+            horseEntity.setYaw(player.getYaw());
+            horseEntity.setTame(true);
+            horseEntity.setNoGravity(true);
+            horseEntity.setInvulnerable(true);
+            horseEntity.setSilent(true);
+            vehicle = horseEntity;
+        } else {
+            BoatEntity boat = new BoatEntity(world, player.getX(), player.getY(), player.getZ());
+            boat.setYaw(player.getYaw());
+            boat.setNoGravity(true);
+            boat.setInvulnerable(true);
+            boat.setSilent(true);
+            vehicle = boat;
+        }
+
+        world.spawnEntity(vehicle);
+        player.startRiding(vehicle, true);
+
+        world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_BOAT_PADDLE_WATER, SoundCategory.PLAYERS, 1.0f, 1.0f);
+
+        automlg$vehicle = vehicle;
+        automlg$vehicleTimer = 1;
+    }
+
+    @Unique
+    private void automlg$vehicleCleanup(PlayerEntity player, World world) {
+        if (automlg$vehicleTimer < 0) return;
+        automlg$vehicleTimer--;
+        if (automlg$vehicleTimer >= 0) return;
+
+        if (automlg$vehicle != null) {
+            player.stopRiding();
+            automlg$vehicle.discard();
+            automlg$vehicle = null;
+        }
+        automlg$vehicleTimer = -1;
     }
 }

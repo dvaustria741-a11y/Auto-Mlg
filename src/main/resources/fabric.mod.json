@@ -3,7 +3,7 @@
   "id": "automlg",
   "version": "${version}",
   "name": "Auto MLG",
-  "description": "Automatic boat, water bucket, and powder snow MLG with reliable auto pickup. Configure via Mod Menu.",
+  "description": "Automatic boat, horse, water bucket, powder snow, hay bale, cobweb, and sweet berry bush MLG with reliable auto pickup. Configure via Mod Menu.",
   "authors": [
     "Zen"
   ],

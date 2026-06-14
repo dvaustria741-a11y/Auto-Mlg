@@ -3,7 +3,8 @@
   "package": "com.zen.automlg.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "PlayerEntityMixin"
+    "PlayerEntityMixin",
+    "EntityAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

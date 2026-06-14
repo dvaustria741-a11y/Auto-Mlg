@@ -16,18 +16,27 @@ public class AutoMLGConfigScreen extends Screen {
 
     @Override
     protected void init() {
-        int centerX = this.width / 2;
-        int y = this.height / 2 - 80;
         int spacing = 24;
+        int y = this.height / 2 - (spacing * 6) / 2;
+        int leftX = this.width / 2 - 105;
+        int rightX = this.width / 2 + 105;
 
-        addToggle(centerX, y, "Auto Boat MLG", () -> AutoMLGConfig.boatEnabled, v -> AutoMLGConfig.boatEnabled = v);
-        addToggle(centerX, y + spacing, "Auto Water Bucket MLG", () -> AutoMLGConfig.waterEnabled, v -> AutoMLGConfig.waterEnabled = v);
-        addToggle(centerX, y + spacing * 2, "Auto Water Pickup", () -> AutoMLGConfig.waterPickupEnabled, v -> AutoMLGConfig.waterPickupEnabled = v);
-        addToggle(centerX, y + spacing * 3, "Auto Powder Snow MLG", () -> AutoMLGConfig.snowEnabled, v -> AutoMLGConfig.snowEnabled = v);
-        addToggle(centerX, y + spacing * 4, "Auto Snow Pickup", () -> AutoMLGConfig.snowPickupEnabled, v -> AutoMLGConfig.snowPickupEnabled = v);
+        addToggle(leftX, y, "Boat MLG", () -> AutoMLGConfig.boatEnabled, v -> AutoMLGConfig.boatEnabled = v);
+        addToggle(leftX, y + spacing, "Horse MLG", () -> AutoMLGConfig.horseEnabled, v -> AutoMLGConfig.horseEnabled = v);
+        addToggle(leftX, y + spacing * 2, "Water Bucket MLG", () -> AutoMLGConfig.waterEnabled, v -> AutoMLGConfig.waterEnabled = v);
+        addToggle(leftX, y + spacing * 3, "Water Pickup", () -> AutoMLGConfig.waterPickupEnabled, v -> AutoMLGConfig.waterPickupEnabled = v);
+        addToggle(leftX, y + spacing * 4, "Powder Snow MLG", () -> AutoMLGConfig.snowEnabled, v -> AutoMLGConfig.snowEnabled = v);
+        addToggle(leftX, y + spacing * 5, "Snow Pickup", () -> AutoMLGConfig.snowPickupEnabled, v -> AutoMLGConfig.snowPickupEnabled = v);
+
+        addToggle(rightX, y, "Hay Bale MLG", () -> AutoMLGConfig.hayBaleEnabled, v -> AutoMLGConfig.hayBaleEnabled = v);
+        addToggle(rightX, y + spacing, "Hay Bale Pickup", () -> AutoMLGConfig.hayBalePickupEnabled, v -> AutoMLGConfig.hayBalePickupEnabled = v);
+        addToggle(rightX, y + spacing * 2, "Cobweb MLG", () -> AutoMLGConfig.cobwebEnabled, v -> AutoMLGConfig.cobwebEnabled = v);
+        addToggle(rightX, y + spacing * 3, "Cobweb Pickup", () -> AutoMLGConfig.cobwebPickupEnabled, v -> AutoMLGConfig.cobwebPickupEnabled = v);
+        addToggle(rightX, y + spacing * 4, "Sweet Berries MLG", () -> AutoMLGConfig.sweetBerryEnabled, v -> AutoMLGConfig.sweetBerryEnabled = v);
+        addToggle(rightX, y + spacing * 5, "Sweet Berries Pickup", () -> AutoMLGConfig.sweetBerryPickupEnabled, v -> AutoMLGConfig.sweetBerryPickupEnabled = v);
 
         this.addDrawableChild(ButtonWidget.builder(Text.literal("Done"), button -> this.close())
-                .dimensions(centerX - 75, y + spacing * 5 + 12, 150, 20)
+                .dimensions(this.width / 2 - 75, y + spacing * 6 + 12, 150, 20)
                 .build());
     }
 

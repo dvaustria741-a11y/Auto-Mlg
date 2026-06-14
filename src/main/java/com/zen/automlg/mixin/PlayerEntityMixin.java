@@ -23,6 +23,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(PlayerEntity.class)
 public abstract class PlayerEntityMixin {
 
+    @Unique private static final float FALL_DAMAGE_THRESHOLD = 3.0f;
+    @Unique private static final int GROUND_RANGE = 4;
+
     @Unique private int automlg$waterPickupTimer = -1;
     @Unique private BlockPos automlg$waterPickupPos = null;
 
@@ -71,13 +74,20 @@ public abstract class PlayerEntityMixin {
     }
 
     @Unique
+    private boolean automlg$fallenEnough(PlayerEntity player) {
+        float fallDistance = ((EntityAccessor) (Object) player).automlg$getFallDistance();
+        return fallDistance > FALL_DAMAGE_THRESHOLD;
+    }
+
+    @Unique
     private void automlg$placeWater(PlayerEntity player, World world) {
         if (player.getVelocity().y >= -0.5) return;
+        if (!automlg$fallenEnough(player)) return;
 
         BlockPos pos = player.getBlockPos();
         BlockState here = world.getBlockState(pos);
         if (!here.isAir()) return;
-        if (!automlg$nearGround(player, world, 4)) return;
+        if (!automlg$nearGround(player, world, GROUND_RANGE)) return;
 
         world.setBlockState(pos, Blocks.WATER.getDefaultState());
         player.setStackInHand(Hand.MAIN_HAND, new ItemStack(Items.BUCKET));
@@ -113,11 +123,12 @@ public abstract class PlayerEntityMixin {
     @Unique
     private void automlg$placeSnow(PlayerEntity player, World world) {
         if (player.getVelocity().y >= -0.5) return;
+        if (!automlg$fallenEnough(player)) return;
 
         BlockPos pos = player.getBlockPos();
         BlockState here = world.getBlockState(pos);
         if (!here.isAir()) return;
-        if (!automlg$nearGround(player, world, 4)) return;
+        if (!automlg$nearGround(player, world, GROUND_RANGE)) return;
 
         world.setBlockState(pos, Blocks.POWDER_SNOW.getDefaultState());
         player.setStackInHand(Hand.MAIN_HAND, new ItemStack(Items.BUCKET));
@@ -154,12 +165,13 @@ public abstract class PlayerEntityMixin {
     private void automlg$boatMLG(PlayerEntity player, World world) {
         if (automlg$boat != null) return;
         if (player.getVelocity().y >= -0.5) return;
+        if (!automlg$fallenEnough(player)) return;
 
         BlockPos below = player.getBlockPos().down();
         BlockState belowState = world.getBlockState(below);
         if (!belowState.isAir() && belowState.getFluidState().isEmpty()) return;
 
-        if (!automlg$nearGround(player, world, 4)) return;
+        if (!automlg$nearGround(player, world, GROUND_RANGE)) return;
 
         BoatEntity boat = new BoatEntity(world, player.getX(), player.getY(), player.getZ());
         boat.setYaw(player.getYaw());

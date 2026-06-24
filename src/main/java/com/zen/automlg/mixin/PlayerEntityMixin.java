@@ -344,7 +344,8 @@ public abstract class PlayerEntityMixin {
             horseEntity.setSilent(true);
             vehicle = horseEntity;
         } else {
-            BoatEntity boat = new BoatEntity(world, player.getX(), player.getY(), player.getZ());
+            BoatEntity boat = new BoatEntity(EntityType.OAK_BOAT, world, () -> Items.OAK_BOAT);
+            boat.setPosition(player.getX(), player.getY(), player.getZ());
             boat.setYaw(player.getYaw());
             boat.setNoGravity(true);
             boat.setInvulnerable(true);
